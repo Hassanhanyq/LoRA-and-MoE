@@ -13,9 +13,9 @@ MIN_YEAR = 2022
 
 def main():
     client = arxiv.Client(
-        page_size=25,
+        page_size=500,
         delay_seconds=3,
-        num_retries=3
+        num_retries=10
     )
 
     search = arxiv.Search(
