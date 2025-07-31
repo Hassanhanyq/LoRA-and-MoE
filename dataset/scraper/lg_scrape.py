@@ -26,7 +26,7 @@ def main():
     )
 
     results_generator = client.results(search)
-    save_path = SAVE_DIR / "papersro.json"
+    save_path = SAVE_DIR / "paperslg.json"
 
     with open(save_path, "w", encoding="utf-8") as f:
         f.write("[\n")
