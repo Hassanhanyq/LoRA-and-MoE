@@ -7,7 +7,7 @@ SAVE_DIR = Path("data")
 SAVE_DIR.mkdir(exist_ok=True)
 
 CATEGORY = "cs.LG"
-QUERY = "(information bottleneck OR minimum description length OR compression bounds OR PAC-Bayes theory OR flat minima OR sharpness-aware minimization OR lottery ticket hypothesis OR neural collapse OR double descent OR dynamical isometry OR scaling laws OR signal propagation OR neural scaling hypothesis OR margin theory OR Fisher-Rao norm OR NTK linear regime OR sparsity-inducing priors)"
+QUERY = "(equilibrium propagation OR neural differential equations OR manifold hypothesis OR complexity priors OR mirror descent OR Fenchel duality OR Bregman divergence OR Wasserstein gradient flow OR optimal transport theory OR Jacobian regularization OR Fisher information matrix OR Lyapunov stability OR Koopman operators OR control variates OR measure concentration OR Talagrand inequality OR non-Euclidean geometry OR Riemannian optimization OR Langevin dynamics OR stochastic control)"
 MAX_RESULTS = 50
 MIN_YEAR = 2022
 
@@ -26,7 +26,7 @@ def main():
     )
 
     results_generator = client.results(search)
-    save_path = SAVE_DIR / "paperslg3.json"
+    save_path = SAVE_DIR / "paperslg4.json"
 
     with open(save_path, "w", encoding="utf-8") as f:
         f.write("[\n")
