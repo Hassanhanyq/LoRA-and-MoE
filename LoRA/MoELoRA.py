@@ -40,7 +40,6 @@ class MoEUpProjWithLoRA(nn.Module):
         
         hard_one_hot = F.one_hot(top1_idx, num_classes=self.num_experts).float()  
         gate_mix = (hard_one_hot - probs).detach() + probs  
-
         
         self.routing_stats.append(top1_idx.detach().cpu())
         counts = torch.bincount(top1_idx, minlength=self.num_experts)
@@ -53,7 +52,7 @@ class MoEUpProjWithLoRA(nn.Module):
         sorted_idx = torch.argsort(top1_idx)
         x_sorted = x_flat[sorted_idx]         
         top1_sorted = top1_idx[sorted_idx]     
-
+        gate_mix_sorted = gate_mix[sorted_idx]
         expert_outputs = torch.zeros_like(x_flat)
         #scatter/gather probs works better here this should be fixed
         cursor = 0
@@ -63,8 +62,9 @@ class MoEUpProjWithLoRA(nn.Module):
             if cnt == 0:
                 continue
             expert_input = x_sorted[cursor:cursor + cnt]  
-            expert_output = self.experts[expert_id](expert_input)  
-            expert_outputs[cursor:cursor + cnt] = expert_output
+            expert_output = self.experts[expert_id](expert_input)
+            expert_mask = gate_mix_sorted[cursor:cursor + cnt, expert_id:expert_id+1]  
+            expert_outputs[cursor:cursor + cnt] = expert_output * expert_mask
             cursor += cnt
 
         
