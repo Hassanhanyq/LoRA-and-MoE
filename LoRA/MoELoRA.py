@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .lora_expert import LoRAExpert
+from lora_expert import LoRAExpert
 
 class MoEUpProjWithLoRA(nn.Module):
     def __init__(self, original_up_proj, num_experts=4, hidden_size=4096, adapter_rank=8, alpha=8):
