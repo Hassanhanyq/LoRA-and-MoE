@@ -4,20 +4,27 @@ import torch.nn.functional as F
 from lora_expert import LoRAExpert
 
 class MoEUpProjWithLoRA(nn.Module):
-    def __init__(self, original_up_proj, num_experts=4, hidden_size=4096, adapter_rank=8, alpha=8):
+    def __init__(self, original_up_proj, num_experts=4, hidden_size=4096, adapter_rank=8, alpha=8, dtype=None):
         super().__init__()
         self.num_experts = num_experts
-        self.hidden_size = hidden_size
+        self.in_features = original_up_proj.in_features
+        self.out_features = original_up_proj.out_features
 
         self.original_up_proj = original_up_proj
         for param in self.original_up_proj.parameters():
             param.requires_grad = False  #freeze base
 
         self.experts = nn.ModuleList([
-            LoRAExpert(hidden_size, adapter_rank, alpha) for _ in range(num_experts)
+            LoRAExpert(
+                in_features=self.in_features,    
+                out_features=self.out_features,  
+                rank=adapter_rank,                
+                alpha=alpha,
+                dtype=dtype
+            ) for _ in range(num_experts)
         ])
-        self.gate = nn.Linear(hidden_size, num_experts, bias=False)
-        self.expert_bias = nn.Parameter(torch.zeros(num_experts))
+        self.gate = nn.Linear(self.in_features, num_experts, bias=False, dtype=dtype)
+        self.expert_bias = nn.Parameter(torch.zeros(num_experts, dtype=dtype))
 
         #tracking
         self.routing_stats = []          
@@ -53,7 +60,11 @@ class MoEUpProjWithLoRA(nn.Module):
         x_sorted = x_flat[sorted_idx]         
         top1_sorted = top1_idx[sorted_idx]     
         gate_mix_sorted = gate_mix[sorted_idx]
-        expert_outputs = torch.zeros_like(x_flat)
+        expert_outputs = torch.zeros(
+            x_flat.shape[0], self.out_features, 
+            dtype=x_flat.dtype, 
+            device=x_flat.device
+        )
         #scatter/gather probs works better here this should be fixed
         cursor = 0
         for expert_id in range(self.num_experts):
@@ -69,7 +80,7 @@ class MoEUpProjWithLoRA(nn.Module):
 
         
         restore_idx = torch.argsort(sorted_idx)
-        updated = expert_outputs[restore_idx].view(B, T, H)  
+        updated = expert_outputs[restore_idx].view(B, T, self.out_features) 
 
         return base_out + updated
 
